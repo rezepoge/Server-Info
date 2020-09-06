@@ -180,6 +180,10 @@ hr {
     background-color: purple
 }
 
+.container_loadBar_inner.overload {
+    background-color: pink;
+}
+
 .cpuChart,
 .ramChart {
     width: 100%;

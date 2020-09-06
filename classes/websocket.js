@@ -156,7 +156,7 @@ function fetchContainerData() {
         containerLoadArchive[elem.name].cpu.push(elem.cpu);
         containerLoadArchive[elem.name].ram.push(elem.ram);
 
-        if (containerLoadArchive[elem.name].cpu.length > 180) {
+        if (containerLoadArchive[elem.name].cpu.length > 60) {
             containerLoadArchive[elem.name].cpu.shift();
             containerLoadArchive[elem.name].ram.shift();
         }

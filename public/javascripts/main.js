@@ -179,7 +179,7 @@ function updateCpuChart(val) {
 }
 
 function renderSysloadData(json) {
-    if(!json) return;
+    if (!json) return;
     cpuStatus.style.backgroundColor = 'green';
     cpuStatus.setAttribute('title', new Date().toLocaleTimeString('de-de'));
     loadText.innerHTML = '1 Min.: ' + json.sysload[0].toFixed(2) + ' - 5 Min.: ' + json.sysload[1].toFixed(2) + ' - 15 Min.: ' + json.sysload[2].toFixed(2) + '<br>' +
@@ -221,7 +221,7 @@ function updateRamChart(val) {
 }
 
 function renderRamData(json) {
-    if(!json) return;
+    if (!json) return;
     ramStatus.style.backgroundColor = 'green';
     ramStatus.setAttribute('title', new Date().toLocaleTimeString('de-de'));
     ramText.innerHTML = 'Gesammt: ' + json.total + ' - Belegt: ' + json.used + ' - Frei: ' + json.free;
@@ -230,7 +230,7 @@ function renderRamData(json) {
 }
 
 function renderHddData(json) {
-    if(!json) return;
+    if (!json) return;
     hddStatus.style.backgroundColor = 'green';
     hddStatus.setAttribute('title', new Date().toLocaleTimeString('de-de'));
     hddText.innerHTML = 'Gesammt: ' + json.total + ' - Belegt: ' + json.used + ' - Frei: ' + json.free;
@@ -239,7 +239,7 @@ function renderHddData(json) {
 }
 
 function renderContainerData(json) {
-    if(!json) return;
+    if (!json) return;
     containerStatus.style.backgroundColor = 'green';
     containerStatus.setAttribute('title', new Date().toLocaleTimeString('de-de'));
     containers.clearChildren();
@@ -254,21 +254,22 @@ function renderContainerData(json) {
                     <p class="container_status">${containerData.status}</p>
                     <div class="container_loadBar_outer" title="CPU: ${containerData.cpu}">
                         <div class="container_loadBar_inner cpu ` +
-            (containerData.cpu > 70 ? 'critical' :
+            (containerData.cpu > 100 ? 'overload' :
+                containerData.cpu > 67 ? 'critical' :
                 containerData.cpu > 50 ? 'high' :
-                containerData.cpu > 15 ? 'increased' : '') +
-            `" style="width:${containerData.cpu}%" title="CPU: ${containerData.cpu}%"></div>
-                        <div class="container_loadBar_avg" style="left:${containerData.cpuAvg}%"></div>
-                        <div class="container_loadBar_max" style="left:${containerData.cpuMax}%"></div>
+                containerData.cpu > 33 ? 'increased' : '') +
+            `" style="width:${containerData.cpu > 100 ? 100 : containerData.cpu}%" title="CPU: ${containerData.cpu}%"></div>
+                        <div class="container_loadBar_avg" style="left:${containerData.cpuAvg > 100 ? 100 : containerData.cpuAvg}%"></div>
+                        <div class="container_loadBar_max" style="left:${containerData.cpuMax > 100 ? 100 : containerData.cpuMax}%"></div>
                     </div>
                     <div class="container_loadBar_outer" title="RAM: ${containerData.ram}">
                         <div class="container_loadBar_inner ram ` +
             (containerData.ram > 90 ? 'critical' :
                 containerData.ram > 80 ? 'high' :
                 containerData.ram > 67 ? 'increased' : '') +
-            `" style="width:${containerData.ram}%" title="RAM: ${containerData.ram}%"></div>
-                        <div class="container_loadBar_avg" style="left:${containerData.ramAvg}%"></div>
-                        <div class="container_loadBar_max" style="left:${containerData.ramMax}%"></div>
+            `" style="width:${containerData.ram > 100 ? 100 : containerData.ram}%" title="RAM: ${containerData.ram}%"></div>
+                        <div class="container_loadBar_avg" style="left:${containerData.ramAvg > 100 ? 100 : containerData.ramAvg}%"></div>
+                        <div class="container_loadBar_max" style="left:${containerData.ramMax > 100 ? 100 : containerData.ramMax}%"></div>
                     </div>`;
 
         containers.appendChild(container);
@@ -276,7 +277,7 @@ function renderContainerData(json) {
 }
 
 function renderNetworkData(json) {
-    if(!json) return;
+    if (!json) return;
     ethStatus.style.backgroundColor = 'green';
     ethStatus.setAttribute('title', new Date().toLocaleTimeString('de-de'));
     ethText.innerHTML = '<table>' +
@@ -287,7 +288,7 @@ function renderNetworkData(json) {
 }
 
 function renderNetworkVpnData(json) {
-    if(!json) return;
+    if (!json) return;
     vpnStatus.style.backgroundColor = 'green';
     vpnStatus.setAttribute('title', new Date().toLocaleTimeString('de-de'));
     vpnText.innerHTML = '<table>' +
@@ -298,7 +299,7 @@ function renderNetworkVpnData(json) {
 }
 
 function renderSoftwareData(json) {
-    if(!json) return;
+    if (!json) return;
     swStatus.style.backgroundColor = 'green';
     swStatus.setAttribute('title', new Date().toLocaleTimeString('de-de'));
     softwareText.innerHTML = '<b>OS:</b> ' + json.os +
@@ -308,7 +309,7 @@ function renderSoftwareData(json) {
 }
 
 function renderUptimeData(json) {
-    if(!json) return;
+    if (!json) return;
     utStatus.style.backgroundColor = 'green';
     utStatus.setAttribute('title', new Date().toLocaleTimeString('de-de'));
     uptimeText.innerHTML = json.uptime_formated;
