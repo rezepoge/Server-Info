@@ -1,5 +1,7 @@
 const async = require('async');
 const serverinfo = require('./serverinfo');
+const settings = require('./settings').get();
+const store = require('./store');
 
 let wss = null;
 const cpuLoadArchive = [];
@@ -12,44 +14,26 @@ let hddDataCache = {};
 let netLoadDataCache = {};
 let containerDataCache = {};
 
+const monitorableValues = {
+    'cpu': fetchCpuData,
+    'ram': fetchRamData,
+    'hdd': fetchHddData,
+    'container': fetchContainerData,
+    'network': fetchNetworkLoadData,
+    'software': fetchSoftwareVersionData,
+    'uptime': fetchUptimeData
+}
+
 module.exports = {
     init(_wss) {
         wss = _wss;
 
-        fetchCpuData();
-        setInterval(() => {
-            fetchCpuData();
-        }, 5000);
-
-        fetchRamData();
-        setInterval(() => {
-            fetchRamData();
-        }, 10000);
-
-        fetchHddData();
-        setInterval(() => {
-            fetchHddData();
-        }, 45000);
-
-        fetchContainerData();
-        setInterval(() => {
-            fetchContainerData();
-        }, 30000);
-
-        fetchNetworkLoadData();
-        setInterval(() => {
-            fetchNetworkLoadData();
-        }, 15000);
-
-        fetchSoftwareVersionData();
-        setInterval(() => {
-            fetchSoftwareVersionData();
-        }, 60000);
-
-        fetchUptimeData();
-        setInterval(() => {
-            fetchUptimeData();
-        }, 60000);
+        settings.monitoredValues.forEach(val => {
+            monitorableValues[val.name](val.params);
+            setInterval(() => {
+                monitorableValues[val.name](val.params);
+            }, val.interval);
+        });
     },
     connect(ws) {
         ws.on('message', message => {
@@ -86,9 +70,9 @@ function getInitialData() {
         netLoadData: netLoadDataCache,
         softVerData: serverinfo.getSoftwareVersions(),
         uptimeData: serverinfo.getUptime(),
-        cpuLoadArchive: cpuLoadArchive,
+        cpuLoadArchive: store.get('cpuLoadArchive'),
         ramLoadArchive: ramLoadArchive,
-    }
+    };
 }
 
 function fetchCpuData() {
@@ -103,13 +87,10 @@ function fetchCpuData() {
             }
         }));
     });
-    cpuLoadArchive.push({
-        y: 100.0 - cpuData.idle,
+    store.pushList('cpuLoadArchive', {
+        y: parseFloat((100.0 - cpuData.idle).toFixed(3)),
         t: new Date()
-    });
-    if (cpuLoadArchive.length > 360) {
-        cpuLoadArchive.shift();
-    }
+    }, 360);
 }
 
 function fetchRamData() {
@@ -130,8 +111,8 @@ function fetchRamData() {
     }
 }
 
-function fetchHddData() {
-    serverinfo.getHddData().then(hddData => {
+function fetchHddData(params) {
+    serverinfo.getHddData(params.paths[0]).then(hddData => {
         hddDataCache = hddData;
         async.forEach(wss.clients, sock => {
             sock.send(JSON.stringify({
@@ -180,17 +161,18 @@ function fetchContainerData() {
     });
 }
 
-function fetchNetworkLoadData() {
-    const netLoadData = {
-        eth0: serverinfo.getNetworkLoad('eth0'),
-        tun0: serverinfo.getNetworkLoad('tun0'),
-    };
+function fetchNetworkLoadData(params) {
+    const netLoadData = {};
+
+    params.interfaces.forEach(interface => {
+        netLoadData[interface] = serverinfo.getNetworkLoad(interface);
+    });
 
     netLoadDataCache = netLoadData;
 
     async.forEach(wss.clients, sock => {
         sock.send(JSON.stringify({
-            purpose: "updateSoftwareVersionsData",
+            purpose: "updateNetLoadData",
             data: netLoadData
         }));
     });

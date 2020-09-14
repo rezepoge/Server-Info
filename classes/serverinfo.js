@@ -50,15 +50,15 @@ function getRamData() {
     };
 }
 
-function getHddData() {
+function getHddData(path) {
     return new Promise((resolve, reject) => {
-        diskspace.check('/', function (err, result) {
+        diskspace.check(path, function (err, result) {
             const totalMem = result.total;
             const freeMem = result.free;
             const usedMem = result.used;
             const percent = parseFloat((usedMem / totalMem * 100).toFixed(2));
 
-            if(!err) {
+            if (!err) {
                 resolve({
                     total: utils.getByte(totalMem),
                     free: utils.getByte(freeMem),
@@ -119,29 +119,30 @@ function getNetworkLoad(netInt) {
     const netload_out = {};
 
     if (!fs.existsSync('/sys/class/net/' + netInt)) {
-        res.json({
+        return {
             error: 'Interface ' + netInt + ' does\'t exists',
-        });
-        return;
+        };
     }
 
     netload_in['total'] = fs.readFileSync('/sys/class/net/' + netInt + '/statistics/rx_bytes', 'utf8');
     netload_out['total'] = fs.readFileSync('/sys/class/net/' + netInt + '/statistics/tx_bytes', 'utf8');
 
     timeSpans.forEach(timeSpan => {
-        const comparingTimeSpan = timeSpan == 'yesterday' ? 'tilltoday' : 'total';
+        if (fs.existsSync(basePath + timeSpan + '_' + netInt)) {
+            const comparingTimeSpan = timeSpan == 'yesterday' ? 'tilltoday' : 'total';
 
-        const netloadForTimeSpan = fs.readFileSync(basePath + timeSpan + '_' + netInt, 'utf8').split('\n');
-        const netload_in_f = parseInt(netloadForTimeSpan[0]);
-        const netload_out_f = parseInt(netloadForTimeSpan[1]);
+            const netloadForTimeSpan = fs.readFileSync(basePath + timeSpan + '_' + netInt, 'utf8').split('\n');
+            const netload_in_f = parseInt(netloadForTimeSpan[0]);
+            const netload_out_f = parseInt(netloadForTimeSpan[1]);
 
-        if (timeSpan == 'day') {
-            netload_in['tilltoday'] = netload_in_f;
-            netload_out['tilltoday'] = netload_out_f;
+            if (timeSpan == 'day') {
+                netload_in['tilltoday'] = netload_in_f;
+                netload_out['tilltoday'] = netload_out_f;
+            }
+
+            netload_in[timeSpan] = netload_in[comparingTimeSpan] - netload_in_f;
+            netload_out[timeSpan] = netload_out[comparingTimeSpan] - netload_out_f;
         }
-
-        netload_in[timeSpan] = netload_in[comparingTimeSpan] - netload_in_f;
-        netload_out[timeSpan] = netload_out[comparingTimeSpan] - netload_out_f;
     });
 
     let min = parseInt(new Date().getMinutes());
@@ -172,36 +173,46 @@ function getNetworkLoad(netInt) {
 }
 
 function getSoftwareVersions() {
-    const debianVer = 'Debian ' + shell.cat('/etc/debian_version').trim();
+    try {
+        const debianVer = 'Debian ' + shell.cat('/etc/debian_version').trim();
 
-    const apacheVer = shell.exec('/usr/sbin/apache2 -v', {
-            silent: true
-        }).stdout
-        .match(/[0-9]+\.[0-9]+\.[0-9]+/)[0];
+        const apacheVer = shell.exec('/usr/sbin/apache2 -v', {
+                silent: true
+            }).stdout
+            .match(/[0-9]+\.[0-9]+\.[0-9]+/)[0];
 
-    const sslVer = shell.exec('openssl version', {
-            silent: true
-        }).stdout
-        .match(/[0-9]+\.[0-9]+\.[0-9a-zA-z]+/)[0];
+        const sslVer = shell.exec('openssl version', {
+                silent: true
+            }).stdout
+            .match(/[0-9]+\.[0-9]+\.[0-9a-zA-z]+/)[0];
 
-    const phpVer74 = shell.exec('/usr/local/php7.4/bin/php -v', {
-            silent: true
-        }).stdout
-        .match(/[0-9]+\.[0-9]+\.[0-9]+/)[0];
+        const phpVer74 = shell.exec('/usr/local/php7.4/bin/php -v', {
+                silent: true
+            }).stdout
+            .match(/[0-9]+\.[0-9]+\.[0-9]+/)[0];
 
-    const phpVer73 = shell.exec('/usr/local/php7.3/bin/php -v', {
-            silent: true
-        }).stdout
-        .match(/[0-9]+\.[0-9]+\.[0-9]+/)[0];
+        const phpVer73 = shell.exec('/usr/local/php7.3/bin/php -v', {
+                silent: true
+            }).stdout
+            .match(/[0-9]+\.[0-9]+\.[0-9]+/)[0];
 
-    const phpVer = `${phpVer74}, ${phpVer73}`;
+        const phpVer = `${phpVer74}, ${phpVer73}`;
 
-    return {
-        os: debianVer,
-        apache: apacheVer,
-        php: phpVer,
-        openssl: sslVer,
-    };
+
+        return {
+            os: debianVer,
+            apache: apacheVer,
+            php: phpVer,
+            openssl: sslVer,
+        };
+    } catch (ex) {
+        return {
+            os: 'debianVer',
+            apache: 'apacheVer',
+            php: 'phpVer',
+            openssl: 'sslVer',
+        };
+    }
 }
 
 function getUptime() {

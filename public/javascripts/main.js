@@ -124,7 +124,7 @@ function Serverinfo(wsurl) {
                     case 'updateContainerData':
                         renderContainerData(json.data);
                         break;
-                    case 'updateNetworkData':
+                    case 'updateNetLoadData':
                         renderNetworkData(json.data.eth0);
                         renderNetworkVpnData(json.data.tun0);
                         break;
@@ -278,6 +278,7 @@ function renderContainerData(json) {
 
 function renderNetworkData(json) {
     if (!json) return;
+    if (!json.in || !json.out) return;
     ethStatus.style.backgroundColor = 'green';
     ethStatus.setAttribute('title', new Date().toLocaleTimeString('de-de'));
     ethText.innerHTML = '<table>' +
@@ -289,6 +290,7 @@ function renderNetworkData(json) {
 
 function renderNetworkVpnData(json) {
     if (!json) return;
+    if (!json.in || !json.out) return
     vpnStatus.style.backgroundColor = 'green';
     vpnStatus.setAttribute('title', new Date().toLocaleTimeString('de-de'));
     vpnText.innerHTML = '<table>' +
