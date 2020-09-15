@@ -4,15 +4,6 @@ const settings = require('./settings').get();
 const store = require('./store');
 
 let wss = null;
-const cpuLoadArchive = [];
-const ramLoadArchive = [];
-const containerLoadArchive = {};
-
-let cpuDataCache = {};
-let ramDataCache = {};
-let hddDataCache = {};
-let netLoadDataCache = {};
-let containerDataCache = {};
 
 const monitorableValues = {
     'cpu': fetchCpuData,
@@ -58,62 +49,63 @@ module.exports = {
 }
 
 function getInitialData() {
-    return {
-        purpose: "initialData",
-        cpuData: {
-            percentage: cpuDataCache,
-            sysload: serverinfo.getSysLoad(),
-        },
-        ramData: ramDataCache,
-        hddData: hddDataCache,
-        containerData: containerDataCache,
-        netLoadData: netLoadDataCache,
-        softVerData: serverinfo.getSoftwareVersions(),
-        uptimeData: serverinfo.getUptime(),
-        cpuLoadArchive: store.get('cpuLoadArchive'),
-        ramLoadArchive: ramLoadArchive,
-    };
+    const initialData = {
+        purpose: "initialData"
+    }
+
+    settings.monitoredValues.forEach(val => {
+        initialData[val.name] = store.get(val.name);
+        if (val.name == 'cpu' || val.name == 'ram') {
+            initialData[val.name + 'Archive'] = store.get(val.name + 'Archive');
+        }
+    });
+
+    return initialData;
 }
 
 function fetchCpuData() {
-    const cpuData = serverinfo.getCpuData();
-    cpuDataCache = cpuData;
+    const cpuData = {
+        percentage: serverinfo.getCpuData(),
+        sysload: serverinfo.getSysLoad(),
+    };
+
+    store.set('cpu', cpuData);
+
     async.forEach(wss.clients, sock => {
         sock.send(JSON.stringify({
             purpose: "updateCpuData",
-            data: {
-                percentage: cpuData,
-                sysload: serverinfo.getSysLoad()
-            }
+            data: cpuData
         }));
     });
-    store.pushList('cpuLoadArchive', {
-        y: parseFloat((100.0 - cpuData.idle).toFixed(3)),
+
+    store.pushToPersistentList('cpuArchive', {
+        y: parseFloat((100.0 - cpuData.percentage.idle).toFixed(3)),
         t: new Date()
     }, 360);
 }
 
 function fetchRamData() {
     const ramData = serverinfo.getRamData();
-    ramDataCache = ramData;
+
+    store.set('ram', ramData);
+
     async.forEach(wss.clients, sock => {
         sock.send(JSON.stringify({
             purpose: "updateRamData",
             data: ramData,
         }));
     });
-    ramLoadArchive.push({
+
+    store.pushToPersistentList('ramArchive', {
         y: ramData.percent,
         t: new Date()
-    });
-    if (ramLoadArchive.length > 180) {
-        ramLoadArchive.shift();
-    }
+    }, 180);
 }
 
 function fetchHddData(params) {
     serverinfo.getHddData(params.paths[0]).then(hddData => {
-        hddDataCache = hddData;
+        store.set('hdd', hddData);
+
         async.forEach(wss.clients, sock => {
             sock.send(JSON.stringify({
                 purpose: "updateHddData",
@@ -125,6 +117,7 @@ function fetchHddData(params) {
 
 function fetchContainerData() {
     const containerData = serverinfo.getContainerStatus();
+    const containerLoadArchive = store.get('containerArchive') || {};
 
     containerData.containers.forEach(elem => {
         if (!containerLoadArchive[elem.name]) {
@@ -151,7 +144,8 @@ function fetchContainerData() {
         elem.ramMax = Math.max.apply(null, containerLoadArchive[elem.name].ram);
     });
 
-    containerDataCache = containerData;
+    store.set('containerArchive', containerLoadArchive);
+    store.set('hdd', containerData);
 
     async.forEach(wss.clients, sock => {
         sock.send(JSON.stringify({
@@ -168,7 +162,7 @@ function fetchNetworkLoadData(params) {
         netLoadData[interface] = serverinfo.getNetworkLoad(interface);
     });
 
-    netLoadDataCache = netLoadData;
+    store.set('network', netLoadData);
 
     async.forEach(wss.clients, sock => {
         sock.send(JSON.stringify({
@@ -179,19 +173,27 @@ function fetchNetworkLoadData(params) {
 }
 
 function fetchSoftwareVersionData() {
+    const softwareData = serverinfo.getSoftwareVersions();
+
+    store.set('software', softwareData);
+
     async.forEach(wss.clients, sock => {
         sock.send(JSON.stringify({
             purpose: "updateSoftVerData",
-            data: serverinfo.getSoftwareVersions(),
+            data: softwareData,
         }));
     });
 }
 
 function fetchUptimeData() {
+    const uptimeData = serverinfo.getUptime();
+
+    store.set('uptime', uptimeData);
+
     async.forEach(wss.clients, sock => {
         sock.send(JSON.stringify({
             purpose: "updateUptimeData",
-            data: serverinfo.getUptime(),
+            data: uptimeData,
         }));
     });
 }

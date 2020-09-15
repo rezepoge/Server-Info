@@ -100,17 +100,18 @@ function Serverinfo(wsurl) {
             if (json.purpose) {
                 switch (json.purpose) {
                     case 'initialData':
-                        renderSysloadData(json.cpuData);
-                        renderRamData(json.ramData);
-                        renderHddData(json.hddData);
-                        renderContainerData(json.containerData);
-                        renderNetworkData(json.netLoadData.eth0);
-                        renderNetworkVpnData(json.netLoadData.tun0);
-                        renderSoftwareData(json.softVerData);
-                        renderUptimeData(json.uptimeData);
-
-                        initCpuChart(json.cpuLoadArchive);
-                        initRamChart(json.ramLoadArchive);
+                        renderSysloadData(json.cpu);
+                        initCpuChart(json.cpuArchive);
+                        renderRamData(json.ram);
+                        initRamChart(json.ramArchive);
+                        renderHddData(json.hdd);
+                        renderContainerData(json.container);
+                        if(json.netLoad) {
+                            renderNetworkData(json.netLoad.eth0);
+                            renderNetworkVpnData(json.netLoad.tun0);
+                        }
+                        renderSoftwareData(json.softVer);
+                        renderUptimeData(json.uptime);
                         break;
                     case 'updateCpuData':
                         renderSysloadData(json.data);

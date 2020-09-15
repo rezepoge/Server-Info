@@ -1,9 +1,9 @@
 'use strict';
+
 const diskspace = require('diskspace');
 const os = require('os');
 const shell = require('shelljs');
 const fs = require('fs');
-const fsp = require('fs').promises;
 const utils = require('./utils');
 
 function getCpuData() {

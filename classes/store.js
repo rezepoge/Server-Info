@@ -1,5 +1,6 @@
 'use strict';
 
+const { check } = require('diskspace');
 const Redis = require('redis');
 const settings = require('./settings').get();
 const baseKey = 'serverinfo_';
@@ -20,23 +21,24 @@ module.exports = {
     set(key, value) {
         localStore[key] = value;
     },
-    pushList(key, value, maxLength) {
+    setAndPersist(key, value) {
+        localStore[key] = value;
+        persistKey(key);
+    },
+    pushToPersistentList(key, value, maxLength) {
         if (!Array.isArray(localStore[key])) {
             localStore[key] = [];
             if (redis) {
                 redis.get(baseKey + key, (err, data) => {
                     console.debug('push', err, data);
-                    if (!err) {
+                    if (!err && data) {
                         localStore[key] = JSON.parse(data);
                     }
 
                     localStore[key].push(value);
 
-                    if (localStore[key].length > maxLength) {
-                        localStore[key].shift();
-                    }
-
-                    redis.set(baseKey + key, JSON.stringify(localStore[key]));
+                    checkMaxLength(key, maxLength);
+                    persistKey(key);
 
                     return;
                 });
@@ -44,15 +46,22 @@ module.exports = {
         }
         localStore[key].push(value);
 
-        if (localStore[key].length > maxLength) {
-            localStore[key].shift();
-        }
-
-        if (redis) {
-            redis.set(baseKey + key, JSON.stringify(localStore[key]));
-        }
+        checkMaxLength(key, maxLength);
+        persistKey(key);
     },
     get(key) {
         return localStore[key];
+    }
+}
+
+function checkMaxLength(key, maxLength) {
+    if (localStore[key].length > maxLength) {
+        localStore[key].shift();
+    }
+}
+
+function persistKey(key) {
+    if (redis) {
+        redis.set(baseKey + key, JSON.stringify(localStore[key]));
     }
 }
