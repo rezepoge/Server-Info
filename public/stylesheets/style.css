@@ -83,18 +83,24 @@ hr {
     margin-left: 5px
 }
 
-.status {
-    margin-left: .5em;
-    display: inline-block;
-    background-color: gray;
-    transition-duration: .5s;
-    width: .6em;
-    height: .6em;
-    border-radius: .5em;
-    cursor: help
+
+@media only screen and (min-width:1280px) {
+    .wrapper {
+        width: 90%;
+    }
+
+    .wrapper.container {
+        width: 100%;
+    }
 }
 
-.text {
+@media only screen and (max-width:1279px) {
+    .wrapper {
+        width: 100%;
+    }
+}
+
+.content {
     margin: 5px auto;
     text-align: center;
     line-height: 1.5em;
@@ -102,37 +108,50 @@ hr {
     overflow-x: auto
 }
 
-#containers {
+.container .content {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     padding: 10px
 }
 
-.container {
+.content table {
+    min-width: 450px;
+    margin: 0 auto;
+}
+
+.container_entry {
     background-color: var(--alphaWhite);
     padding: 10px;
     margin: 5px;
-    min-width: 200px;
+    min-width: 180px;
     border-radius: 3px
+}
+
+@media only screen and (max-width:470px) {
+    .container_entry {
+        width: 100%;
+    }
 }
 
 .container_name {
     font-weight: 700;
-    margin: 0 0 8px 0
+    margin: 0 0 8px 0;
+    line-height: 1;
 }
 
 .container_image,
 .container_status {
-    margin: 0 0 3px 0;
-    font-size: 10pt
+    margin: 0 0 4px 0;
+    font-size: 10pt;
+    line-height: 1;
 }
 
-.container.Up {
+.container_entry.Up {
     border-top: medium solid green
 }
 
-.container:not(.Up) {
+.container_entry:not(.Up) {
     border-top: medium solid red
 }
 
@@ -184,16 +203,13 @@ hr {
     background-color: pink;
 }
 
-.cpuChart,
-.ramChart {
+.chart {
     width: 100%;
     height: 200px
 }
 
 @media only screen and (min-width:1280px) {
-
-    .cpuChart,
-    .ramChart {
+    .chart {
         max-width: 29.333vw
     }
 }

@@ -19,10 +19,10 @@ module.exports = {
     init(_wss) {
         wss = _wss;
 
-        settings.monitoredValues.forEach(val => {
-            monitorableValues[val.name](val.params);
+        settings.monitoredValues.forEach((val, key) => {
+            monitorableValues[val.type](key, val.params);
             setInterval(() => {
-                monitorableValues[val.name](val.params);
+                monitorableValues[val.type](key, val.params);
             }, val.interval);
         });
     },
@@ -50,30 +50,39 @@ module.exports = {
 
 function getInitialData() {
     const initialData = {
-        purpose: "initialData"
+        purpose: "initialData",
+        data: []
     }
 
-    settings.monitoredValues.forEach(val => {
-        initialData[val.name] = store.get(val.name);
-        if (val.name == 'cpu' || val.name == 'ram') {
-            initialData[val.name + 'Archive'] = store.get(val.name + 'Archive');
+    settings.monitoredValues.forEach((val, key) => {
+        const data = {
+            data: store.get(val.type + '_' + key),
+            id: key,
+            type: val.type
+        };
+
+        if (val.type == 'cpu' || val.type == 'ram') {
+            data['archive'] = store.get(val.type + 'Archive');
         }
+
+        initialData.data.push(data);
     });
 
     return initialData;
 }
 
-function fetchCpuData() {
+function fetchCpuData(key) {
     const cpuData = {
         percentage: serverinfo.getCpuData(),
         sysload: serverinfo.getSysLoad(),
     };
 
-    store.set('cpu', cpuData);
+    store.set('cpu_' + key, cpuData);
 
     async.forEach(wss.clients, sock => {
         sock.send(JSON.stringify({
             purpose: "updateCpuData",
+            id: key,
             data: cpuData
         }));
     });
@@ -84,14 +93,15 @@ function fetchCpuData() {
     }, 360);
 }
 
-function fetchRamData() {
+function fetchRamData(key) {
     const ramData = serverinfo.getRamData();
 
-    store.set('ram', ramData);
+    store.set('ram_' + key, ramData);
 
     async.forEach(wss.clients, sock => {
         sock.send(JSON.stringify({
             purpose: "updateRamData",
+            id: key,
             data: ramData,
         }));
     });
@@ -102,20 +112,21 @@ function fetchRamData() {
     }, 180);
 }
 
-function fetchHddData(params) {
-    serverinfo.getHddData(params.paths[0]).then(hddData => {
-        store.set('hdd', hddData);
+function fetchHddData(key, params) {
+    serverinfo.getHddData(params.path).then(hddData => {
+        store.set('hdd_' + key, hddData);
 
         async.forEach(wss.clients, sock => {
             sock.send(JSON.stringify({
                 purpose: "updateHddData",
+                id: key,
                 data: hddData
             }));
         });
     });
 }
 
-function fetchContainerData() {
+function fetchContainerData(key) {
     const containerData = serverinfo.getContainerStatus();
     const containerLoadArchive = store.get('containerArchive') || {};
 
@@ -145,54 +156,54 @@ function fetchContainerData() {
     });
 
     store.set('containerArchive', containerLoadArchive);
-    store.set('hdd', containerData);
+    store.set('container_' + key, containerData);
 
     async.forEach(wss.clients, sock => {
         sock.send(JSON.stringify({
             purpose: "updateContainerData",
+            id: key,
             data: containerData,
         }));
     });
 }
 
-function fetchNetworkLoadData(params) {
-    const netLoadData = {};
+function fetchNetworkLoadData(key, params) {
+    const netLoadData = serverinfo.getNetworkLoad(params.interface);
 
-    params.interfaces.forEach(interface => {
-        netLoadData[interface] = serverinfo.getNetworkLoad(interface);
-    });
-
-    store.set('network', netLoadData);
+    store.set('network_' + key, netLoadData);
 
     async.forEach(wss.clients, sock => {
         sock.send(JSON.stringify({
             purpose: "updateNetLoadData",
+            id: key,
             data: netLoadData
         }));
     });
 }
 
-function fetchSoftwareVersionData() {
-    const softwareData = serverinfo.getSoftwareVersions();
+function fetchSoftwareVersionData(key, params) {
+    const softwareData = serverinfo.getSoftwareVersions(params.instructions);
 
-    store.set('software', softwareData);
+    store.set('software_' + key, softwareData);
 
     async.forEach(wss.clients, sock => {
         sock.send(JSON.stringify({
             purpose: "updateSoftVerData",
+            id: key,
             data: softwareData,
         }));
     });
 }
 
-function fetchUptimeData() {
+function fetchUptimeData(key) {
     const uptimeData = serverinfo.getUptime();
 
-    store.set('uptime', uptimeData);
+    store.set('uptime_' + key, uptimeData);
 
     async.forEach(wss.clients, sock => {
         sock.send(JSON.stringify({
             purpose: "updateUptimeData",
+            id: key,
             data: uptimeData,
         }));
     });

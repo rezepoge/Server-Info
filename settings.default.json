@@ -1,30 +1,68 @@
 {
     "monitoredValues": [{
-        "name": "cpu",
+        "type": "cpu",
+        "displayName": "CPU",
         "interval": 5000
     }, {
-        "name": "ram",
+        "type": "ram",
+        "displayName": "RAM",
         "interval": 10000
     }, {
-        "name": "hdd",
+        "type": "hdd",
+        "displayName": "HDD",
         "interval": 45000,
         "params": {
-            "paths": ["/"]
+            "path": "/"
         }
     }, {
-        "name": "container",
+        "type": "container",
+        "displayName": "Docker Container",
         "interval": 30000
     }, {
-        "name": "network",
+        "type": "network",
+        "displayName": "Network",
         "interval": 15000,
         "params": {
-            "interfaces": ["eth0", "tun0"]
+            "interface": "eth0"
         }
     }, {
-        "name": "software",
-        "interval": 60000
+        "type": "network",
+        "displayName": "VPN",
+        "interval": 15000,
+        "params": {
+            "interface": "tun0"
+        }
     }, {
-        "name": "uptime",
+        "type": "software",
+        "displayName": "Software",
+        "interval": 60000,
+        "params": {
+            "instructions": [{
+                "name": "Debian",
+                "cmd": "/bin/cat /etc/debian_version"
+            },{
+                "name": "Apache",
+                "cmd": "apache2 -v | grep -Po '[0-9]+\\.[0-9]+\\.[0-9]+'"
+            }, {
+                "name": "Nginx",
+                "cmd": "nginx -v 2>&1 | grep -Po '[0-9]+\\.[0-9]+\\.[0-9]+'"
+            }, {
+                "name": "PHP 7.4",
+                "cmd": "/usr/local/php7.4/bin/php -v | grep -Po '(?<=PHP )[0-9]+\\.[0-9]+\\.[0-9]+'"
+            }, {
+                "name": "PHP 7.3",
+                "cmd": "/usr/local/php7.3/bin/php -v | grep -Po '(?<=PHP )[0-9]+\\.[0-9]+\\.[0-9]+'"
+            }, {
+                "name": "Docker",
+                "cmd": "docker -v | grep -Po '[0-9]+\\.[0-9]+\\.[0-9]+'"
+            }, {
+                "name": "OpenSSL",
+                "cmd": "openssl version | grep -Po '[0-9]+\\.[0-9]+\\.[0-9a-zA-z]+'"
+            }]
+        }
+    }, {
+        "type": "uptime",
+        "displayName": "Uptime",
         "interval": 60000
     }],
     "redis": {

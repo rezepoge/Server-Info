@@ -1,33 +1,7 @@
 'use strict';
 
-// Initilize text elements
-const hddText = document.querySelector('#hdd .text');
-const loadText = document.querySelector('#load.text');
-const ramText = document.querySelector('#ram.text');
-const ethText = document.querySelector('#eth .text');
-const vpnText = document.querySelector('#vpn .text');
-const containers = document.getElementById('containers');
-const softwareText = document.querySelector('#software .text');
-const uptimeText = document.querySelector('#uptime .text');
-
-// Initilize loading circles
-const hddLadebalkenElem = document.querySelector('#hdd .ladebalken');
-
-// Initilize status elements
-const hddStatus = document.querySelector('#hdd_status');
-const cpuStatus = document.querySelector('#cpu_status');
-const ramStatus = document.querySelector('#ram_status');
-const ethStatus = document.querySelector('#eth_status');
-const vpnStatus = document.querySelector('#vpn_status');
-const containerStatus = document.querySelector('#container_status');
-const swStatus = document.querySelector('#sw_status');
-const utStatus = document.querySelector('#ut_status');
-
-const cpuChartCanvas = document.getElementById('cpuChart_chartcanvas');
-const ramChartCanvas = document.getElementById('ramChart_chartcanvas');
-
-// Set initial chart value
-setCrircleChart(hddLadebalkenElem, 0);
+const cpuChartCanvas = document.getElementById('cpuChart_canvas');
+const ramChartCanvas = document.getElementById('ramChart_canvas');
 
 const chartOptions = {
     maintainAspectRatio: false,
@@ -100,40 +74,55 @@ function Serverinfo(wsurl) {
             if (json.purpose) {
                 switch (json.purpose) {
                     case 'initialData':
-                        renderSysloadData(json.cpu);
-                        initCpuChart(json.cpuArchive);
-                        renderRamData(json.ram);
-                        initRamChart(json.ramArchive);
-                        renderHddData(json.hdd);
-                        renderContainerData(json.container);
-                        if(json.netLoad) {
-                            renderNetworkData(json.netLoad.eth0);
-                            renderNetworkVpnData(json.netLoad.tun0);
-                        }
-                        renderSoftwareData(json.softVer);
-                        renderUptimeData(json.uptime);
+
+                        json.data.forEach(val => {
+                            switch (val.type) {
+                                case 'cpu':
+                                    renderSysloadData(val.data, val.id);
+                                    initCpuChart(val.archive);
+                                    break;
+                                case 'ram':
+                                    renderRamData(val.data, val.id);
+                                    initRamChart(val.archive);
+                                    break;
+                                case 'hdd':
+                                    renderHddData(val.data, val.id);
+                                    break;
+                                case 'container':
+                                    renderContainerData(val.data, val.id);
+                                    break;
+                                case 'network':
+                                    renderNetworkData(val.data, val.id);
+                                    break;
+                                case 'software':
+                                    renderSoftwareData(val.data, val.id);
+                                    break;
+                                case 'uptime':
+                                    renderUptimeData(val.data, val.id);
+                                    break;
+                            }
+                        });
                         break;
                     case 'updateCpuData':
-                        renderSysloadData(json.data);
+                        renderSysloadData(json.data, json.id);
                         break;
                     case 'updateRamData':
-                        renderRamData(json.data);
+                        renderRamData(json.data, json.id);
                         break;
                     case 'updateHddData':
-                        renderHddData(json.data);
+                        renderHddData(json.data, json.id);
                         break;
                     case 'updateContainerData':
-                        renderContainerData(json.data);
+                        renderContainerData(json.data, json.id);
                         break;
                     case 'updateNetLoadData':
-                        renderNetworkData(json.data.eth0);
-                        renderNetworkVpnData(json.data.tun0);
+                        renderNetworkData(json.data, json.id);
                         break;
                     case 'updateSoftVerData':
-                        renderSoftwareData(json.data);
+                        renderSoftwareData(json.data, json.id);
                         break;
                     case 'updateUptimeData':
-                        renderUptimeData(json.data);
+                        renderUptimeData(json.data, json.id);
                         break;
                 }
             }
@@ -179,18 +168,6 @@ function updateCpuChart(val) {
     }
 }
 
-function renderSysloadData(json) {
-    if (!json) return;
-    cpuStatus.style.backgroundColor = 'green';
-    cpuStatus.setAttribute('title', new Date().toLocaleTimeString('de-de'));
-    loadText.innerHTML = '1 Min.: ' + json.sysload[0].toFixed(2) + ' - 5 Min.: ' + json.sysload[1].toFixed(2) + ' - 15 Min.: ' + json.sysload[2].toFixed(2) + '<br>' +
-        'Nutzer: ' + json.percentage.user + '% - Hintergrund: ' + json.percentage.nice + '% - System: ' + json.percentage.sys + '% - Leerlauf: ' + json.percentage.idle + '%';
-
-    const load = (100.0 - json.percentage.idle);
-
-    updateCpuChart(load);
-}
-
 function initRamChart(data) {
     ramChart = new Chart(ramChartCanvas, {
         type: 'line',
@@ -221,35 +198,52 @@ function updateRamChart(val) {
     }
 }
 
-function renderRamData(json) {
+function renderSysloadData(json, id) {
     if (!json) return;
-    ramStatus.style.backgroundColor = 'green';
-    ramStatus.setAttribute('title', new Date().toLocaleTimeString('de-de'));
-    ramText.innerHTML = 'Gesammt: ' + json.total + ' - Belegt: ' + json.used + ' - Frei: ' + json.free;
+
+    const elem = document.querySelector('#cpu_' + id + ' .content');
+
+    elem.innerHTML = '1 Min.: ' + json.sysload[0].toFixed(2) + ' - 5 Min.: ' + json.sysload[1].toFixed(2) + ' - 15 Min.: ' + json.sysload[2].toFixed(2) + '<br>' +
+        'Nutzer: ' + json.percentage.user + '% - Hintergrund: ' + json.percentage.nice + '% - System: ' + json.percentage.sys + '% - Leerlauf: ' + json.percentage.idle + '%';
+
+    const load = (100.0 - json.percentage.idle);
+
+    updateCpuChart(load);
+}
+
+function renderRamData(json, id) {
+    if (!json) return;
+
+    const elem = document.querySelector('#ram_' + id + ' .content');
+
+    elem.innerHTML = 'Gesammt: ' + json.total + ' - Belegt: ' + json.used + ' - Frei: ' + json.free;
 
     updateRamChart(json.percent);
 }
 
-function renderHddData(json) {
+function renderHddData(json, id) {
     if (!json) return;
-    hddStatus.style.backgroundColor = 'green';
-    hddStatus.setAttribute('title', new Date().toLocaleTimeString('de-de'));
-    hddText.innerHTML = 'Gesammt: ' + json.total + ' - Belegt: ' + json.used + ' - Frei: ' + json.free;
+
+    const elem = document.querySelector('#hdd_' + id + ' .content');
+
+    elem.innerHTML = 'Gesammt: ' + json.total + ' - Belegt: ' + json.used + ' - Frei: ' + json.free;
+
+    const hddLadebalkenElem = document.querySelector('#hdd_' + id + ' .ladebalken');
 
     setCrircleChart(hddLadebalkenElem, json.percent);
 }
 
-function renderContainerData(json) {
+function renderContainerData(json, id) {
     if (!json) return;
-    containerStatus.style.backgroundColor = 'green';
-    containerStatus.setAttribute('title', new Date().toLocaleTimeString('de-de'));
-    containers.clearChildren();
+
+    const elem = document.querySelector('#container_' + id + ' .content');
+    elem.clearChildren();
 
     for (let key in json.containers) {
         const containerData = json.containers[key];
 
         const container = document.createElement('div');
-        container.className = 'container ' + containerData.status.split(' ')[0];
+        container.className = 'container_entry ' + containerData.status.split(' ')[0];
         container.innerHTML = `<p class="container_name">${containerData.name}</p>
                     <p class="container_image">${containerData.image}</p>
                     <p class="container_status">${containerData.status}</p>
@@ -273,49 +267,43 @@ function renderContainerData(json) {
                         <div class="container_loadBar_max" style="left:${containerData.ramMax > 100 ? 100 : containerData.ramMax}%"></div>
                     </div>`;
 
-        containers.appendChild(container);
+        elem.appendChild(container);
     }
 }
 
-function renderNetworkData(json) {
+function renderNetworkData(json, id) {
     if (!json) return;
     if (!json.in || !json.out) return;
-    ethStatus.style.backgroundColor = 'green';
-    ethStatus.setAttribute('title', new Date().toLocaleTimeString('de-de'));
-    ethText.innerHTML = '<table>' +
+
+    const elem = document.querySelector('#network_' + id + ' .content');
+
+    elem.innerHTML = '<table>' +
         '<tr><th></th><th>Gesammt</th><th>Gestern</th><th>Heute</th><th>Ltz. Stunde</th></tr>' +
         '<tr><td><b>Eingehend</b></td><td>' + json.in.total + '</td><td>' + json.in.yesterday + '</td><td>' + json.in.today + '</td><td>' + json.in.lasthour + '</td></tr>' +
         '<tr><td><b>Ausgehend</b></td><td>' + json.out.total + '</td><td>' + json.out.yesterday + '</td><td>' + json.out.today + '</td><td>' + json.out.lasthour + '</td></tr>' +
         '</table><br/>Durchschn. Auslastung: ' + json.avgload + ' (' + json.percent + '% bei 100 Mbit/s)';
 }
 
-function renderNetworkVpnData(json) {
+function renderSoftwareData(json, id) {
     if (!json) return;
-    if (!json.in || !json.out) return
-    vpnStatus.style.backgroundColor = 'green';
-    vpnStatus.setAttribute('title', new Date().toLocaleTimeString('de-de'));
-    vpnText.innerHTML = '<table>' +
-        '<tr><th></th><th>Gesammt</th><th>Gestern</th><th>Heute</th><th>Ltz. Stunde</th></tr>' +
-        '<tr><td><b>Eingehend</b></td><td>' + json.in.total + '</td><td>' + json.in.yesterday + '</td><td>' + json.in.today + '</td><td>' + json.in.lasthour + '</td></tr>' +
-        '<tr><td><b>Ausgehend</b></td><td>' + json.out.total + '</td><td>' + json.out.yesterday + '</td><td>' + json.out.today + '</td><td>' + json.out.lasthour + '</td></tr>' +
-        '</table>';
+
+    const elem = document.querySelector('#software_' + id + ' .content');
+
+    let html = '';
+
+    json.forEach(val => {
+        html += `<b>${val.name}</b>: ${val.val} ● `;
+    });
+
+    elem.innerHTML = html.slice(0, -3);;
 }
 
-function renderSoftwareData(json) {
+function renderUptimeData(json, id) {
     if (!json) return;
-    swStatus.style.backgroundColor = 'green';
-    swStatus.setAttribute('title', new Date().toLocaleTimeString('de-de'));
-    softwareText.innerHTML = '<b>OS:</b> ' + json.os +
-        ' ● <b>Apache:</b> ' + json.apache +
-        ' ● <b>PHP:</b> ' + json.php +
-        ' ● <b>OpenSSL:</b> ' + json.openssl;
-}
 
-function renderUptimeData(json) {
-    if (!json) return;
-    utStatus.style.backgroundColor = 'green';
-    utStatus.setAttribute('title', new Date().toLocaleTimeString('de-de'));
-    uptimeText.innerHTML = json.uptime_formated;
+    const elem = document.querySelector('#uptime_' + id + ' .content');
+
+    elem.innerHTML = json.uptime_formated;
 }
 
 function setCrircleChart(elem, percent) {

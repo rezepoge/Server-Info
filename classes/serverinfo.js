@@ -172,47 +172,23 @@ function getNetworkLoad(netInt) {
     };
 }
 
-function getSoftwareVersions() {
+function getSoftwareVersions(instructions) {
+    const versions = [];
+
     try {
-        const debianVer = 'Debian ' + shell.cat('/etc/debian_version').trim();
-
-        const apacheVer = shell.exec('/usr/sbin/apache2 -v', {
-                silent: true
-            }).stdout
-            .match(/[0-9]+\.[0-9]+\.[0-9]+/)[0];
-
-        const sslVer = shell.exec('openssl version', {
-                silent: true
-            }).stdout
-            .match(/[0-9]+\.[0-9]+\.[0-9a-zA-z]+/)[0];
-
-        const phpVer74 = shell.exec('/usr/local/php7.4/bin/php -v', {
-                silent: true
-            }).stdout
-            .match(/[0-9]+\.[0-9]+\.[0-9]+/)[0];
-
-        const phpVer73 = shell.exec('/usr/local/php7.3/bin/php -v', {
-                silent: true
-            }).stdout
-            .match(/[0-9]+\.[0-9]+\.[0-9]+/)[0];
-
-        const phpVer = `${phpVer74}, ${phpVer73}`;
-
-
-        return {
-            os: debianVer,
-            apache: apacheVer,
-            php: phpVer,
-            openssl: sslVer,
-        };
+        instructions.forEach(val => {
+            versions.push({
+                name: val.name,
+                val: shell.exec(val.cmd, {
+                    silent: true
+                }).stdout
+            })
+        });
     } catch (ex) {
-        return {
-            os: 'debianVer',
-            apache: 'apacheVer',
-            php: 'phpVer',
-            openssl: 'sslVer',
-        };
+        console.error(ex);
     }
+
+    return versions
 }
 
 function getUptime() {
