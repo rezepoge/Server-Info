@@ -30,7 +30,6 @@ module.exports = {
             localStore[key] = [];
             if (redis) {
                 redis.get(baseKey + key, (err, data) => {
-                    console.debug('push', err, data);
                     if (!err && data) {
                         localStore[key] = JSON.parse(data);
                     }
@@ -51,6 +50,15 @@ module.exports = {
     },
     get(key) {
         return localStore[key];
+    },
+    sync(key) {
+        if (redis) {
+            redis.get(baseKey + key, (err, data) => {
+                if (!err && data) {
+                    localStore[key] = JSON.parse(data);
+                }
+            });
+        }
     }
 }
 

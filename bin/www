@@ -20,7 +20,9 @@ const wss = new WebSocket.Server({
   server
 });
 
-WebSocketCon.init(wss);
+setTimeout(() => {
+  WebSocketCon.init(wss);
+}, 1000);
 
 wss.on('connection', ws => WebSocketCon.connect(ws));
 

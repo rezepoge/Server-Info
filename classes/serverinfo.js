@@ -4,7 +4,17 @@ const diskspace = require('diskspace');
 const os = require('os');
 const shell = require('shelljs');
 const fs = require('fs');
+const fsp = require('fs').promises;
 const utils = require('./utils');
+const store = require('./store');
+const settings = require('./settings').get();
+const CronJob = require('cron').CronJob;
+
+const monitoredInterfaces = settings.monitoredValues
+    .filter(val => val.type == 'network')
+    .map(val => val.params.interface);
+monitoredInterfaces.forEach(netInt => store.sync('hourly_' + netInt));
+monitoredInterfaces.forEach(netInt => store.sync('daily_' + netInt));
 
 function getCpuData() {
     const stat1 = fs.readFileSync('/proc/stat', 'utf8').split('\n');
@@ -43,9 +53,9 @@ function getRamData() {
     const percent = parseFloat((usedMem / totalMem * 100).toFixed(2));
 
     return {
-        total: utils.getByte(totalMem),
-        free: utils.getByte(freeMem),
-        used: utils.getByte(usedMem),
+        total: totalMem,
+        free: freeMem,
+        used: usedMem,
         percent: percent
     };
 }
@@ -60,9 +70,9 @@ function getHddData(path) {
 
             if (!err) {
                 resolve({
-                    total: utils.getByte(totalMem),
-                    free: utils.getByte(freeMem),
-                    used: utils.getByte(usedMem),
+                    total: totalMem,
+                    free: freeMem,
+                    used: usedMem,
                     percent: percent
                 });
             } else {
@@ -113,31 +123,30 @@ function getContainerStatus() {
 }
 
 function getNetworkLoad(netInt) {
-    const basePath = '/opt/networkload/nload_';
-    const timeSpans = ['hour', 'day', 'yesterday'];
+    const timeSpans = ['hourly', 'daily', 'yesterday'];
     const netload_in = {};
     const netload_out = {};
 
     if (!fs.existsSync('/sys/class/net/' + netInt)) {
         return {
-            error: 'Interface ' + netInt + ' does\'t exists',
+            error: 'Interface ' + netInt + ' does\'t exists'
         };
     }
 
-    netload_in['total'] = fs.readFileSync('/sys/class/net/' + netInt + '/statistics/rx_bytes', 'utf8');
-    netload_out['total'] = fs.readFileSync('/sys/class/net/' + netInt + '/statistics/tx_bytes', 'utf8');
+    netload_in['total'] = fs.readFileSync('/sys/class/net/' + netInt + '/statistics/rx_bytes', 'utf8').replace(/(\r\n|\n|\r)/gm, '');
+    netload_out['total'] = fs.readFileSync('/sys/class/net/' + netInt + '/statistics/tx_bytes', 'utf8').replace(/(\r\n|\n|\r)/gm, '');
 
     timeSpans.forEach(timeSpan => {
-        if (fs.existsSync(basePath + timeSpan + '_' + netInt)) {
-            const comparingTimeSpan = timeSpan == 'yesterday' ? 'tilltoday' : 'total';
+        const netloadForTimeSpan = store.get(timeSpan + '_' + netInt);
+        console.log(netloadForTimeSpan);
+        if (netloadForTimeSpan) {
+            const comparingTimeSpan = timeSpan == 'yesterday' ? 'daily' : 'total';
+            const netload_in_f = parseInt(netloadForTimeSpan.in);
+            const netload_out_f = parseInt(netloadForTimeSpan.out);
 
-            const netloadForTimeSpan = fs.readFileSync(basePath + timeSpan + '_' + netInt, 'utf8').split('\n');
-            const netload_in_f = parseInt(netloadForTimeSpan[0]);
-            const netload_out_f = parseInt(netloadForTimeSpan[1]);
-
-            if (timeSpan == 'day') {
-                netload_in['tilltoday'] = netload_in_f;
-                netload_out['tilltoday'] = netload_out_f;
+            if (timeSpan == 'daily') {
+                netload_in['daily'] = netload_in_f;
+                netload_out['daily'] = netload_out_f;
             }
 
             netload_in[timeSpan] = netload_in[comparingTimeSpan] - netload_in_f;
@@ -148,23 +157,23 @@ function getNetworkLoad(netInt) {
     let min = parseInt(new Date().getMinutes());
     min = min == 0 ? 1 : min;
 
-    const avgload = utils.getByte(((netload_out['hour'] / min) / 60), 2) + '/Sek.';
-    const minload_kbs = ((netload_out['hour'] / min) / 60) / 1024;
+    const avgload = ((netload_out['hourly'] / min) / 60) + '/Sek.';
+    const minload_kbs = ((netload_out['hourly'] / min) / 60) / 1024;
 
     const percentUsed = parseFloat((minload_kbs / (100 / 8 * 1024) * 100).toFixed(2));
 
     return {
         in: {
-            total: utils.getByte(netload_in['total']),
-            yesterday: utils.getByte(netload_in['yesterday']),
-            today: utils.getByte(netload_in['day']),
-            lasthour: utils.getByte(netload_in['hour']),
+            total: netload_in['total'],
+            yesterday: netload_in['yesterday'],
+            today: netload_in['daily'],
+            lasthour: netload_in['hourly'],
         },
         out: {
-            total: utils.getByte(netload_out['total']),
-            yesterday: utils.getByte(netload_out['yesterday']),
-            today: utils.getByte(netload_out['day']),
-            lasthour: utils.getByte(netload_out['hour']),
+            total: netload_out['total'],
+            yesterday: netload_out['yesterday'],
+            today: netload_out['daily'],
+            lasthour: netload_out['hourly'],
         },
         avgload: avgload,
         percent: percentUsed
@@ -181,22 +190,21 @@ function getSoftwareVersions(instructions) {
                 name: val.name,
                 val: shell.exec(val.cmd, {
                     silent: true
-                }).stdout
+                }).stdout.replace(/(\r\n|\n|\r)/gm, '')
             })
         });
     } catch (ex) {
         console.error(ex);
     }
 
-    return versions
+    return versions;
 }
 
 function getUptime() {
     const uptime = os.uptime();
 
     return {
-        uptime: uptime,
-        uptime_formated: utils.getTime(uptime)
+        uptime: uptime
     };
 }
 
@@ -210,3 +218,31 @@ module.exports = {
     getUptime,
     getSoftwareVersions,
 }
+
+function persistTransferedDataByInterface(netInt, timeSpan) {
+    const promises = [];
+
+    promises.push(fsp.readFile('/sys/class/net/' + netInt + '/statistics/tx_bytes', 'utf8'));
+    promises.push(fsp.readFile('/sys/class/net/' + netInt + '/statistics/rx_bytes', 'utf8'));
+
+    Promise.all(promises).then(data => {
+        if (timeSpan == 'daily') {
+            store.set('yesterday_' + netInt, store.get(timeSpan + '_' + netInt));
+        }
+
+        store.setAndPersist(timeSpan + '_' + netInt, {
+            out: data[0].replace(/(\r\n|\n|\r)/gm, ''),
+            in: data[1].replace(/(\r\n|\n|\r)/gm, '')
+        });
+    });
+}
+
+const hourlyNetworkLoadJob = new CronJob('0 0 * * * *', () => {
+    console.log('hourlyNetworkLoadJob', new Date());
+    monitoredInterfaces.forEach(netInt => persistTransferedDataByInterface(netInt, 'hourly'));
+}, null, true, 'Europe/Berlin');
+
+const dailyNetworkLoadJob = new CronJob('0 0 0 * * *', () => {
+    console.log('dailyNetworkLoadJob', new Date());
+    monitoredInterfaces.forEach(netInt => persistTransferedDataByInterface(netInt, 'daily'));
+}, null, true, 'Europe/Berlin');

@@ -1,7 +1,10 @@
+'use strict';
+
 const async = require('async');
 const serverinfo = require('./serverinfo');
 const settings = require('./settings').get();
 const store = require('./store');
+store.sync('containerArchive');
 
 let wss = null;
 
@@ -155,7 +158,7 @@ function fetchContainerData(key) {
         elem.ramMax = Math.max.apply(null, containerLoadArchive[elem.name].ram);
     });
 
-    store.set('containerArchive', containerLoadArchive);
+    store.setAndPersist('containerArchive', containerLoadArchive);
     store.set('container_' + key, containerData);
 
     async.forEach(wss.clients, sock => {
