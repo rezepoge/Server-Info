@@ -2,39 +2,33 @@
     "monitoredValues": [{
         "type": "cpu",
         "displayName": "CPU",
+        "displayWidth": "third",
         "interval": 5000
-    }, {
-        "type": "ram",
-        "displayName": "RAM",
-        "interval": 10000
     }, {
         "type": "hdd",
         "displayName": "HDD",
+        "displayWidth": "third",
         "interval": 45000,
         "params": {
             "path": "/"
         }
     }, {
-        "type": "container",
-        "displayName": "Docker Container",
-        "interval": 30000
+        "type": "ram",
+        "displayName": "RAM",
+        "displayWidth": "third",
+        "interval": 10000
     }, {
         "type": "network",
         "displayName": "Network",
+        "displayWidth": "half",
         "interval": 15000,
         "params": {
             "interface": "eth0"
         }
     }, {
-        "type": "network",
-        "displayName": "VPN",
-        "interval": 15000,
-        "params": {
-            "interface": "tun0"
-        }
-    }, {
         "type": "software",
         "displayName": "Software",
+        "displayWidth": "half",
         "interval": 60000,
         "params": {
             "instructions": [{
@@ -62,6 +56,7 @@
         }
     }, {
         "type": "uptime",
+        "displayWidth": "half",
         "displayName": "Uptime",
         "interval": 60000
     }],

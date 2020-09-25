@@ -47,16 +47,29 @@ function getCpuData() {
 }
 
 function getRamData() {
-    const totalMem = os.totalmem();
-    const freeMem = os.freemem();
-    const usedMem = totalMem - freeMem;
-    const percent = parseFloat((usedMem / totalMem * 100).toFixed(2));
+    const [
+        total,
+        used,
+        free,
+        shared,
+        cache,
+        avail
+     ] = shell.exec('free -b | sed -e \'2!d\' | grep -oP [0-9]+', {
+        silent: true
+    }).stdout.split('\n', 6);
+
+    const percentUsed = parseFloat((used / total * 100).toFixed(2));
+    const percentNotFree = parseFloat(((total - free) / total * 100).toFixed(2));
 
     return {
-        total: totalMem,
-        free: freeMem,
-        used: usedMem,
-        percent: percent
+        total: total,
+        used,
+        free,
+        shared,
+        cache,
+        avail,
+        percentUsed,
+        percentNotFree
     };
 }
 
@@ -138,7 +151,7 @@ function getNetworkLoad(netInt) {
 
     timeSpans.forEach(timeSpan => {
         const netloadForTimeSpan = store.get(timeSpan + '_' + netInt);
-        console.log(netloadForTimeSpan);
+
         if (netloadForTimeSpan) {
             const comparingTimeSpan = timeSpan == 'yesterday' ? 'daily' : 'total';
             const netload_in_f = parseInt(netloadForTimeSpan.in);

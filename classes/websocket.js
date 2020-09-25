@@ -110,8 +110,14 @@ function fetchRamData(key) {
     });
 
     store.pushToPersistentList('ramArchive', {
-        y: ramData.percent,
-        t: new Date()
+        percentUsed: {
+            y: ramData.percentUsed,
+            t: new Date()
+        },
+        percentNotFree: {
+            y: ramData.percentNotFree,
+            t: new Date()
+        }
     }, 180);
 }
 

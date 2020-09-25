@@ -3,9 +3,9 @@ extends layout
 block content
   .flexBox
     each val, key in monitoredValues
-      .infoBox
+      div(class='infoBox' + (val.displayWidth ? ' ' + val.displayWidth : ''))
         h3=val.displayName
-        div(id=val.type+'_'+key class='wrapper ' +  val.type)
+        div(id=val.type+'_'+key class='wrapper ' + val.type)
           if val.type == 'cpu' || val.type == 'ram'
             div.chart
               canvas(id=val.type+'Chart_canvas')

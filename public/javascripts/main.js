@@ -140,8 +140,8 @@ function Serverinfo(wsurl) {
             data: {
                 datasets: [{
                     data: data,
-                    backgroundColor: '#77997755',
-                    borderColor: '#008000',
+                    backgroundColor: '#bad13933',
+                    borderColor: '#bad139',
                     borderWidth: 2,
                     lineTension: 0,
                     pointRadius: 0,
@@ -171,9 +171,16 @@ function Serverinfo(wsurl) {
             type: 'line',
             data: {
                 datasets: [{
-                    data: data,
-                    backgroundColor: '#77997755',
-                    borderColor: '#008000',
+                    data: data.map(val => val.percentUsed),
+                    backgroundColor: '#bad13933',
+                    borderColor: '#bad139',
+                    borderWidth: 2,
+                    lineTension: 0,
+                    pointRadius: 0,
+                },{
+                    data: data.map(val => val.percentNotFree),
+                    backgroundColor: '#d1763933',
+                    borderColor: '#d17639',
                     borderWidth: 2,
                     lineTension: 0,
                     pointRadius: 0,
@@ -183,15 +190,15 @@ function Serverinfo(wsurl) {
         });
     }
 
-    function updateRamChart(val) {
+    function updateRamChart(val, dataset) {
         if (ramChart) {
-            ramChart.data.datasets[0].data.push({
+            ramChart.data.datasets[dataset].data.push({
                 y: val,
                 t: new Date()
             });
 
-            while (ramChart.data.datasets[0].data.length > 180) {
-                ramChart.data.datasets[0].data.shift();
+            while (ramChart.data.datasets[dataset].data.length > 180) {
+                ramChart.data.datasets[dataset].data.shift();
             }
 
             ramChart.update();
@@ -199,27 +206,28 @@ function Serverinfo(wsurl) {
     }
 
     function renderSysloadData(json, id) {
-        if (!json || !id) return;
+        if (!json || typeof id === 'undefined') return;
 
         const elem = document.querySelector(`#cpu_${id} .content`);
         elem.innerHTML = `1 Min.: ${json.sysload[0].toFixed(2)} - 5 Min.: ${json.sysload[1].toFixed(2)} - 15 Min.: ${json.sysload[2].toFixed(2)}<br>
-            'Nutzer: ${json.percentage.user}% - Hintergrund: ${json.percentage.nice}% - System: ${json.percentage.sys}% - Leerlauf: ${json.percentage.idle}%`;
+            Nutzer: ${json.percentage.user}% - Hintergrund: ${json.percentage.nice}% - System: ${json.percentage.sys}% - Leerlauf: ${json.percentage.idle}%`;
 
         const load = (100.0 - json.percentage.idle);
         updateCpuChart(load);
     }
 
     function renderRamData(json, id) {
-        if (!json || !id) return;
+        if (!json || typeof id === 'undefined') return;
 
         const elem = document.querySelector(`#ram_${id} .content`);
         elem.innerHTML = `Gesammt: ${utils.getByte(json.total)} - Belegt: ${utils.getByte(json.used)} - Frei: ${utils.getByte(json.free)}`;
 
-        updateRamChart(json.percent);
+        updateRamChart(json.percentUsed, 0);
+        updateRamChart(json.percentNotFree, 1);
     }
 
     function renderHddData(json, id) {
-        if (!json || !id) return;
+        if (!json || typeof id === 'undefined') return;
 
         const elem = document.querySelector(`#hdd_${id} .content`);
         elem.innerHTML = `Gesammt: ${utils.getByte(json.total)} - Belegt: ${utils.getByte(json.used)} - Frei: ${utils.getByte(json.free)}`;
@@ -229,7 +237,7 @@ function Serverinfo(wsurl) {
     }
 
     function renderContainerData(json, id) {
-        if (!json || !id) return;
+        if (!json || typeof id === 'undefined') return;
 
         const elem = document.querySelector(`#container_${id} .content`);
         elem.clearChildren();
@@ -271,7 +279,7 @@ function Serverinfo(wsurl) {
     }
 
     function renderNetworkData(json, id) {
-        if (!json || !id) return;
+        if (!json || typeof id === 'undefined') return;
 
         const elem = document.querySelector(`#network_${id} .content`);
         elem.innerHTML = `<table>
@@ -282,14 +290,14 @@ function Serverinfo(wsurl) {
     }
 
     function renderSoftwareData(json, id) {
-        if (!json || !id) return;
+        if (!json || typeof id === 'undefined') return;
 
         const elem = document.querySelector(`#software_${id} .content`);
         elem.innerHTML = json.map(val => `<b>${val.name}</b>: ${val.val}`).join(' ● ');
     }
 
     function renderUptimeData(json, id) {
-        if (!json || !id) return;
+        if (!json || typeof id === 'undefined') return;
 
         const elem = document.querySelector(`#uptime_${id} .content`);
 
@@ -349,11 +357,13 @@ function Serverinfo(wsurl) {
 }
 const utils = {
     getByte(bytes) {
-        bytes = parseFloat(bytes);
-        if (bytes < 0) {
+        if(!bytes || bytes < 0) {
             bytes = 0;
-        }
+        };
+
+        bytes = parseFloat(bytes);
         let symbol = ' Bytes';
+
         if (bytes > 1024) {
             symbol = ' KB';
             bytes /= 1024;
