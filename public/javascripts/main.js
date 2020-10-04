@@ -286,7 +286,7 @@ function Serverinfo(wsurl) {
             <tr><th></th><th>Gesammt</th><th>Gestern</th><th>Heute</th><th>Ltz. Stunde</th></tr>
             <tr><td><b>Eingehend</b></td><td>${utils.getByte(json.in.total)}</td><td>${utils.getByte(json.in.yesterday)}</td><td>${utils.getByte(json.in.today)}</td><td>${utils.getByte(json.in.lasthour)}</td></tr>
             <tr><td><b>Ausgehend</b></td><td>${utils.getByte(json.out.total)}</td><td>${utils.getByte(json.out.yesterday)}</td><td>${utils.getByte(json.out.today)}</td><td>${utils.getByte(json.out.lasthour)}</td></tr>
-            </table><br/>Durchschn. Auslastung: ${utils.getByte(json.avgload)} /Sek. (${json.percent}% bei 100 Mbit/s)`;
+            </table><br/>Durchschn. Auslastung: ${utils.getByte(json.avgload)}/Sek. (${json.percent}% bei 100 Mbit/s)`;
     }
 
     function renderSoftwareData(json, id) {

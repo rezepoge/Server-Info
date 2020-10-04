@@ -147,24 +147,31 @@ function getNetworkLoad(netInt) {
         };
     }
 
-    netload_in['total'] = fs.readFileSync('/sys/class/net/' + netInt + '/statistics/rx_bytes', 'utf8').replace(/(\r\n|\n|\r)/gm, '');
-    netload_out['total'] = fs.readFileSync('/sys/class/net/' + netInt + '/statistics/tx_bytes', 'utf8').replace(/(\r\n|\n|\r)/gm, '');
+    netload_in['total'] = parseInt(
+        fs.readFileSync('/sys/class/net/' + netInt + '/statistics/rx_bytes', 'utf8')
+        .replace(/(\r\n|\n|\r)/gm, '')
+    );
+    netload_out['total'] = parseInt(
+        fs.readFileSync('/sys/class/net/' + netInt + '/statistics/tx_bytes', 'utf8')
+        .replace(/(\r\n|\n|\r)/gm, '')
+    );
 
     timeSpans.forEach(timeSpan => {
-        const netloadForTimeSpan = store.get(timeSpan + '_' + netInt);
+        const netloadForTimeSpan = store.get(timeSpan + '_' + netInt) || 0;
 
         if (netloadForTimeSpan) {
-            const comparingTimeSpan = timeSpan == 'yesterday' ? 'daily' : 'total';
-            const netload_in_f = parseInt(netloadForTimeSpan.in);
-            const netload_out_f = parseInt(netloadForTimeSpan.out);
+            const comparingTimeSpan = timeSpan == 'yesterday' ? 'tilltoday' : 'total';
+
+            const netloadForTimeSpanIn = parseInt(netloadForTimeSpan.in);
+            const netloadForTimeSpanOut = parseInt(netloadForTimeSpan.out);
 
             if (timeSpan == 'daily') {
-                netload_in['daily'] = netload_in_f;
-                netload_out['daily'] = netload_out_f;
+                netload_in['tilltoday'] = netloadForTimeSpanIn;
+                netload_out['tilltoday'] = netloadForTimeSpanOut;
             }
 
-            netload_in[timeSpan] = netload_in[comparingTimeSpan] - netload_in_f;
-            netload_out[timeSpan] = netload_out[comparingTimeSpan] - netload_out_f;
+            netload_in[timeSpan] = netload_in[comparingTimeSpan] - netloadForTimeSpanIn;
+            netload_out[timeSpan] = netload_out[comparingTimeSpan] - netloadForTimeSpanOut;
         }
     });
 
@@ -172,8 +179,7 @@ function getNetworkLoad(netInt) {
     min = min == 0 ? 1 : min;
 
     const avgload = ((netload_out['hourly'] / min) / 60);
-
-    const percentUsed = parseFloat((avgload / 1024 / (100 / 8 * 1024) * 100).toFixed(2));
+    const percentUsed = parseFloat(((avgload / 1024) / (100 / 8 * 1024) * 100).toFixed(2));
 
     return {
         in: {
@@ -240,7 +246,7 @@ function persistTransferedDataByInterface(netInt, timeSpan) {
 
     Promise.all(promises).then(data => {
         if (timeSpan == 'daily') {
-            store.set('yesterday_' + netInt, store.get(timeSpan + '_' + netInt));
+            store.setAndPersist('yesterday_' + netInt, store.get(timeSpan + '_' + netInt));
         }
 
         store.setAndPersist(timeSpan + '_' + netInt, {
