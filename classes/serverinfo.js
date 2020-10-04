@@ -55,7 +55,7 @@ function getRamData() {
         shared,
         cache,
         avail
-     ] = shell.exec('free -b | sed -e \'2!d\' | grep -oP [0-9]+', {
+    ] = shell.exec('free -b | sed -e \'2!d\' | grep -oP [0-9]+', {
         silent: true
     }).stdout.split('\n', 6);
 

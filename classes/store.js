@@ -1,6 +1,8 @@
 'use strict';
 
-const { check } = require('diskspace');
+const {
+    check
+} = require('diskspace');
 const Redis = require('redis');
 const settings = require('./settings').get();
 const baseKey = 'serverinfo_';
