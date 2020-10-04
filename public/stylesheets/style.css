@@ -83,6 +83,7 @@ hr {
 }
 
 @media only screen and (max-width:699px) {
+
     .infoBox.full,
     .infoBox.half,
     .infoBox.third {
@@ -161,6 +162,13 @@ hr {
     padding: 10px
 }
 
+.software .content {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 5px
+}
+
 .content table {
     min-width: 450px;
     margin: 0 auto;
@@ -171,6 +179,14 @@ hr {
     padding: 10px;
     margin: 5px;
     min-width: 180px;
+    border-radius: 3px
+}
+
+.software_entry {
+    background-color: var(--alphaWhite);
+    padding: 5px;
+    margin: 5px;
+    min-width: 150px;
     border-radius: 3px
 }
 

@@ -15,6 +15,7 @@ const monitoredInterfaces = settings.monitoredValues
     .map(val => val.params.interface);
 monitoredInterfaces.forEach(netInt => store.sync('hourly_' + netInt));
 monitoredInterfaces.forEach(netInt => store.sync('daily_' + netInt));
+monitoredInterfaces.forEach(netInt => store.sync('yesterday_' + netInt));
 
 function getCpuData() {
     const stat1 = fs.readFileSync('/proc/stat', 'utf8').split('\n');
@@ -170,10 +171,9 @@ function getNetworkLoad(netInt) {
     let min = parseInt(new Date().getMinutes());
     min = min == 0 ? 1 : min;
 
-    const avgload = ((netload_out['hourly'] / min) / 60) + '/Sek.';
-    const minload_kbs = ((netload_out['hourly'] / min) / 60) / 1024;
+    const avgload = ((netload_out['hourly'] / min) / 60);
 
-    const percentUsed = parseFloat((minload_kbs / (100 / 8 * 1024) * 100).toFixed(2));
+    const percentUsed = parseFloat((avgload / 1024 / (100 / 8 * 1024) * 100).toFixed(2));
 
     return {
         in: {

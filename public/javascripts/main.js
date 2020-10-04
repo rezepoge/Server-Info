@@ -177,7 +177,7 @@ function Serverinfo(wsurl) {
                     borderWidth: 2,
                     lineTension: 0,
                     pointRadius: 0,
-                },{
+                }, {
                     data: data.map(val => val.percentNotFree),
                     backgroundColor: '#d1763933',
                     borderColor: '#d17639',
@@ -286,14 +286,14 @@ function Serverinfo(wsurl) {
             <tr><th></th><th>Gesammt</th><th>Gestern</th><th>Heute</th><th>Ltz. Stunde</th></tr>
             <tr><td><b>Eingehend</b></td><td>${utils.getByte(json.in.total)}</td><td>${utils.getByte(json.in.yesterday)}</td><td>${utils.getByte(json.in.today)}</td><td>${utils.getByte(json.in.lasthour)}</td></tr>
             <tr><td><b>Ausgehend</b></td><td>${utils.getByte(json.out.total)}</td><td>${utils.getByte(json.out.yesterday)}</td><td>${utils.getByte(json.out.today)}</td><td>${utils.getByte(json.out.lasthour)}</td></tr>
-            </table><br/>Durchschn. Auslastung: ${utils.getByte(json.avgload)} (${json.percent}% bei 100 Mbit/s)`;
+            </table><br/>Durchschn. Auslastung: ${utils.getByte(json.avgload)} /Sek. (${json.percent}% bei 100 Mbit/s)`;
     }
 
     function renderSoftwareData(json, id) {
         if (!json || typeof id === 'undefined') return;
 
         const elem = document.querySelector(`#software_${id} .content`);
-        elem.innerHTML = json.map(val => `<b>${val.name}</b>: ${val.val}`).join(' ● ');
+        elem.innerHTML = json.map(val => `<div class="software_entry"><b>${val.name}</b>: ${val.val}</div>`).join('');
     }
 
     function renderUptimeData(json, id) {
@@ -357,7 +357,7 @@ function Serverinfo(wsurl) {
 }
 const utils = {
     getByte(bytes) {
-        if(!bytes || bytes < 0) {
+        if (!bytes || bytes < 0) {
             bytes = 0;
         };
 
@@ -393,6 +393,10 @@ const utils = {
         return bytes + symbol;
     },
     getTime(total) {
+        if (total < 60) {
+            return 'Weniger als eine Minute';
+        }
+
         const seconds = total % 60;
         const minutes = ((total - seconds) / 60) % 60;
         const hours = ((((total - seconds) / 60) - minutes) / 60) % 24;
@@ -414,7 +418,9 @@ const utils = {
         else if (minutes > 1) timeStrArr.push(minutes + ' Minuten');
 
         const lastElemIndex = timeStrArr.length - 1;
-        timeStrArr[lastElemIndex] = 'und ' + timeStrArr[lastElemIndex];
+        if (lastElemIndex > 0) {
+            timeStrArr[lastElemIndex] = 'und ' + timeStrArr[lastElemIndex];
+        }
 
         return timeStrArr.join(' ');
     }
