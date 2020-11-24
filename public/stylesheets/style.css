@@ -166,7 +166,6 @@ hr {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    padding: 5px
 }
 
 .content table {
@@ -184,9 +183,8 @@ hr {
 
 .software_entry {
     background-color: var(--alphaWhite);
-    padding: 5px;
+    padding: 5px 10px;
     margin: 5px;
-    min-width: 150px;
     border-radius: 3px
 }
 
