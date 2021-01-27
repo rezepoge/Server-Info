@@ -210,7 +210,7 @@ function Serverinfo(wsurl) {
 
         const elem = document.querySelector(`#cpu_${id} .content`);
         elem.innerHTML = `1 Min.: ${json.sysload[0].toFixed(2)} - 5 Min.: ${json.sysload[1].toFixed(2)} - 15 Min.: ${json.sysload[2].toFixed(2)}<br>
-            Nutzer: ${json.percentage.user}% - Hintergrund: ${json.percentage.nice}% - System: ${json.percentage.sys}% - Leerlauf: ${json.percentage.idle}%`;
+            Nutzer: ${json.percentage.user}% - Hintergrund: ${json.percentage.nice}% - System: ${json.percentage.sys}% - Leerlauf: ${json.percentage.idle}% - IO-Wait: ${json.percentage.iowait}%`;
 
         const load = (100.0 - json.percentage.idle);
         updateCpuChart(load);

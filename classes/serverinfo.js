@@ -29,7 +29,10 @@ function getCpuData() {
         user: parseInt(info2[0]) - parseInt(info1[0]),
         nice: parseInt(info2[1]) - parseInt(info1[1]),
         sys: parseInt(info2[2]) - parseInt(info1[2]),
-        idle: parseInt(info2[3]) - parseInt(info1[3])
+        idle: parseInt(info2[3]) - parseInt(info1[3]),
+        iowait: parseInt(info2[4]) - parseInt(info1[4]),
+        irq: parseInt(info2[5]) - parseInt(info1[5]),
+        softirq: parseInt(info2[6]) - parseInt(info1[6])
     };
     const total = utils.objectSum(dif);
 
@@ -37,7 +40,10 @@ function getCpuData() {
         user: null,
         nice: null,
         sys: null,
-        idle: null
+        idle: null,
+        iowait: null,
+        irq: null,
+        softirq: null
     };
 
     for (let x in dif) {
