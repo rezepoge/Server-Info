@@ -275,6 +275,7 @@ function Serverinfo(wsurl) {
                 <div class="sysloadVal">1 Min.: ${json.sysload[0].toFixed(2)}</div>
                 <div class="sysloadVal">5 Min.: ${json.sysload[1].toFixed(2)}</div>
                 <div class="sysloadVal">15 Min.: ${json.sysload[2].toFixed(2)}</div>
+                <div class="sysloadVal">Threads: ${json.threads}</div>
             </div>
             <div id="procStat">
                 <div class="procStatVal">User: ${json.percentage.user.toFixed(1)}%</div>
