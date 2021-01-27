@@ -18,6 +18,7 @@ function Serverinfo(wsurl) {
         scales: {
             yAxes: [{
                 id: 'y-axis-1',
+                position: 'left',
                 ticks: {
                     stepSize: 25,
                     fontColor: '#FFF',
@@ -30,8 +31,8 @@ function Serverinfo(wsurl) {
                 }
             },{
                 id: 'y-axis-2',
+                position: 'right',
                 ticks: {
-                    stepSize: 25,
                     fontColor: '#FFF',
                     beginAtZero: true
                 },
