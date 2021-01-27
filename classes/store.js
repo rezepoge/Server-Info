@@ -5,7 +5,7 @@ const {
 } = require('diskspace');
 const Redis = require('redis');
 const settings = require('./settings').get();
-const baseKey = 'serverinfo_';
+const baseKey = 'servifo_';
 
 const redis = settings.redis ? Redis.createClient(settings.redis) : null;
 const localStore = {};
