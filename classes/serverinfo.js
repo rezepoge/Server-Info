@@ -69,7 +69,7 @@ function getRamData() {
     const percentNotFree = parseFloat(((total - free) / total * 100).toFixed(2));
 
     return {
-        total: total,
+        total,
         used,
         free,
         shared,
@@ -78,6 +78,12 @@ function getRamData() {
         percentUsed,
         percentNotFree
     };
+}
+
+function getThreads() {
+    return parseInt(shell.exec(`ps -eo nlwp | tail -n +2 | awk '{ num_threads += $1 } END { print num_threads }'`, {
+        silent: true
+    }).stdout);
 }
 
 function getHddData(path) {
@@ -236,6 +242,7 @@ function getUptime() {
 module.exports = {
     getCpuData,
     getSysLoad: os.loadavg,
+    getThreads,
     getRamData,
     getHddData,
     getContainerStatus,

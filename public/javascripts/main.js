@@ -10,7 +10,58 @@ function Serverinfo(wsurl) {
     const _this = this;
     const cpuChartCanvas = document.getElementById('cpuChart_canvas');
     const ramChartCanvas = document.getElementById('ramChart_canvas');
-    const chartOptions = {
+    const chartOptionsSysload = {
+        maintainAspectRatio: false,
+        legend: {
+            labels: false
+        },
+        scales: {
+            yAxes: [{
+                id: 'y-axis-1',
+                ticks: {
+                    stepSize: 25,
+                    fontColor: '#FFF',
+                    beginAtZero: true,
+                    suggestedMin: 0,
+                    suggestedMax: 100
+                },
+                gridLines: {
+                    color: '#FFFFFF55'
+                }
+            },{
+                id: 'y-axis-2',
+                ticks: {
+                    stepSize: 25,
+                    fontColor: '#FFF',
+                    beginAtZero: true
+                },
+                gridLines: {
+                    color: '#FFFFFF55'
+                }
+            }],
+            xAxes: [{
+                ticks: {
+                    stepSize: 25,
+                    fontColor: '#FFF',
+                    source: 'auto'
+                },
+                gridLines: {
+                    zeroLineColor: '#FFFFFF33',
+                    color: '#FFFFFF33'
+                },
+                type: 'time',
+                time: {
+                    unit: 'minute',
+                    stepSize: 1,
+                    displayFormats: {
+                        minute: 'HH:mm'
+                    }
+                }
+            }]
+        }
+    };
+
+    const chartOptionsRam = {
         maintainAspectRatio: false,
         legend: {
             labels: false
@@ -139,27 +190,36 @@ function Serverinfo(wsurl) {
             type: 'line',
             data: {
                 datasets: [{
-                    data: data,
+                    data: data.map(val => val.cpuLoad),
                     backgroundColor: '#bad13933',
                     borderColor: '#bad139',
                     borderWidth: 2,
                     lineTension: 0,
                     pointRadius: 0,
+                    id: 'y-axis-1',
+                },{
+                    data: data.map(val => val.threads),
+                    backgroundColor: '#bad13933',
+                    borderColor: '#bad139',
+                    borderWidth: 2,
+                    lineTension: 0,
+                    pointRadius: 0,
+                    id: 'y-axis-2',
                 }],
             },
-            options: chartOptions
+            options: chartOptionsSysload
         });
     }
 
-    function updateCpuChart(val) {
+    function updateCpuChart(val, dataset) {
         if (cpuChart) {
-            cpuChart.data.datasets[0].data.push({
+            cpuChart.data.datasets[dataset].data.push({
                 y: val,
                 t: new Date()
             });
 
-            while (cpuChart.data.datasets[0].data.length > 360) {
-                cpuChart.data.datasets[0].data.shift();
+            while (cpuChart.data.datasets[dataset].data.length > 360) {
+                cpuChart.data.datasets[dataset].data.shift();
             }
 
             cpuChart.update();
@@ -186,7 +246,7 @@ function Serverinfo(wsurl) {
                     pointRadius: 0,
                 }],
             },
-            options: chartOptions
+            options: chartOptionsRam
         });
     }
 
@@ -224,7 +284,7 @@ function Serverinfo(wsurl) {
             </div>`;
 
         const load = (100.0 - json.percentage.idle);
-        updateCpuChart(load);
+        updateCpuChart(load, json.threads);
     }
 
     function renderRamData(json, id) {

@@ -78,6 +78,7 @@ function fetchCpuData(key) {
     const cpuData = {
         percentage: serverinfo.getCpuData(),
         sysload: serverinfo.getSysLoad(),
+        threads: serverinfo.getThreads(),
     };
 
     store.set('cpu_' + key, cpuData);
@@ -91,8 +92,14 @@ function fetchCpuData(key) {
     });
 
     store.pushToPersistentList('cpuArchive', {
-        y: parseFloat((100.0 - cpuData.percentage.idle).toFixed(3)),
-        t: new Date()
+        cpuLoad: {
+            y: parseFloat((100.0 - cpuData.percentage.idle).toFixed(3)),
+            t: new Date()
+        },
+        threads: {
+            y: cpuData.threads,
+            t: new Date()
+        }
     }, 360);
 }
 
