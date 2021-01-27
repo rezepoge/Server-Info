@@ -197,7 +197,7 @@ function Serverinfo(wsurl) {
                     borderWidth: 2,
                     lineTension: 0,
                     pointRadius: 0,
-                    id: 'y-axis-1',
+                    yAxisID: 'y-axis-1',
                 },{
                     data: data.map(val => val.threads),
                     backgroundColor: '#bad13933',
@@ -205,7 +205,7 @@ function Serverinfo(wsurl) {
                     borderWidth: 2,
                     lineTension: 0,
                     pointRadius: 0,
-                    id: 'y-axis-2',
+                    yAxisID: 'y-axis-2',
                 }],
             },
             options: chartOptionsSysload
@@ -285,7 +285,8 @@ function Serverinfo(wsurl) {
             </div>`;
 
         const load = (100.0 - json.percentage.idle);
-        updateCpuChart(load, json.threads);
+        updateCpuChart(load, 0);
+        updateCpuChart(json.threads, 1);
     }
 
     function renderRamData(json, id) {
