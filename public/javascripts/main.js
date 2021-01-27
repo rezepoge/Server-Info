@@ -209,8 +209,19 @@ function Serverinfo(wsurl) {
         if (!json || typeof id === 'undefined') return;
 
         const elem = document.querySelector(`#cpu_${id} .content`);
-        elem.innerHTML = `1 Min.: ${json.sysload[0].toFixed(2)} - 5 Min.: ${json.sysload[1].toFixed(2)} - 15 Min.: ${json.sysload[2].toFixed(2)}<br>
-            Nutzer: ${json.percentage.user}% - Hintergrund: ${json.percentage.nice}% - System: ${json.percentage.sys}% - Leerlauf: ${json.percentage.idle}% - IO-Wait: ${json.percentage.iowait}%`;
+        elem.innerHTML =
+            `<div id="sysload">
+                <div class="sysloadVal">1 Min.: ${json.sysload[0].toFixed(2)}</div>
+                <div class="sysloadVal">5 Min.: ${json.sysload[1].toFixed(2)}</div>
+                <div class="sysloadVal">15 Min.: ${json.sysload[2].toFixed(2)}</div>
+            </div>
+            <div id="procStat">
+                <div class="procStatVal">User: ${json.percentage.user.toFixed(1)}%</div>
+                <div class="procStatVal">Nice: ${json.percentage.nice.toFixed(1)}%</div>
+                <div class="procStatVal">System: ${json.percentage.sys.toFixed(1)}%</div>
+                <div class="procStatVal">Idle: ${json.percentage.idle.toFixed(1)}%</div>
+                <div class="procStatVal">I/O Wait: ${json.percentage.iowait.toFixed(1)}%</div>
+            </div>`;
 
         const load = (100.0 - json.percentage.idle);
         updateCpuChart(load);

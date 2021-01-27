@@ -280,3 +280,14 @@ hr {
     text-align: right;
     padding-right: 8px
 }
+
+#sysload,
+#procStat {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.sysloadVal,
+.procStatVal {
+    flex-grow: 1;
+}
