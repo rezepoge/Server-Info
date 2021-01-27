@@ -200,8 +200,8 @@ function Serverinfo(wsurl) {
                     yAxisID: 'y-axis-1',
                 },{
                     data: data.map(val => val.threads),
-                    backgroundColor: '#bad13933',
-                    borderColor: '#bad139',
+                    backgroundColor: '#d1763933',
+                    borderColor: '#d1763933',
                     borderWidth: 2,
                     lineTension: 0,
                     pointRadius: 0,
