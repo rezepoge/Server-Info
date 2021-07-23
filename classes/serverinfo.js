@@ -19,7 +19,7 @@ monitoredInterfaces.forEach(netInt => store.sync('yesterday_' + netInt));
 
 function getCpuData() {
     const stat1 = fs.readFileSync('/proc/stat', 'utf8').split('\n');
-    utils.msleep(1000);
+    await utils.msleep(1000);
     const stat2 = fs.readFileSync('/proc/stat', 'utf8').split('\n');
 
     const info1 = stat1[0].replace(/cpu +/gi, '').split(' ');

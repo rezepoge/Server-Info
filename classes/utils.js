@@ -1,7 +1,7 @@
 'use strict';
 
-function msleep(n) {
-    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, n);
+function msleep(ms) {
+    return new Promise(res => setTimeout(res, ms));
 }
 
 function objectSum(object) {

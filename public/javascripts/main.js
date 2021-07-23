@@ -29,7 +29,7 @@ function Serverinfo(wsurl) {
                 gridLines: {
                     color: '#FFFFFF55'
                 }
-            },{
+            }, {
                 id: 'y-axis-2',
                 position: 'right',
                 ticks: {
@@ -58,7 +58,14 @@ function Serverinfo(wsurl) {
                         minute: 'HH:mm'
                     }
                 }
-            }]
+            }],
+            tooltips: {
+                intersect: false,
+                mode: 'index',
+                callbacks: {
+                    title: tooltipItem => new Date(tooltipItem[0].label).toLocaleTimeString(),
+                }
+            }
         }
     };
 
@@ -98,7 +105,14 @@ function Serverinfo(wsurl) {
                         minute: 'HH:mm'
                     }
                 }
-            }]
+            }],
+            tooltips: {
+                intersect: false,
+                mode: 'index',
+                callbacks: {
+                    title: tooltipItem => new Date(tooltipItem[0].label).toLocaleTimeString(),
+                }
+            }
         }
     };
     let cpuChart, ramChart;
@@ -198,7 +212,7 @@ function Serverinfo(wsurl) {
                     lineTension: 0,
                     pointRadius: 0,
                     yAxisID: 'y-axis-1',
-                },{
+                }, {
                     data: data.map(val => val.threads),
                     backgroundColor: '#d1763933',
                     borderColor: '#d1763933',
